@@ -20,16 +20,11 @@
 #include <compositionengine/DisplayCreationArgs.h>
 #include <compositionengine/DisplaySurface.h>
 #include <compositionengine/LayerFE.h>
-#include <compositionengine/LayerFECompositionState.h>
 #include <compositionengine/impl/Display.h>
 #include <compositionengine/impl/DisplayColorProfile.h>
 #include <compositionengine/impl/DumpHelpers.h>
 #include <compositionengine/impl/OutputLayer.h>
 #include <compositionengine/impl/RenderSurface.h>
-
-#ifdef QTI_DISPLAY_CONFIG_ENABLED
-#include <config/client_interface.h>
-#endif
 
 #include <utils/Trace.h>
 
@@ -45,10 +40,6 @@
 #include "DisplayHardware/PowerAdvisor.h"
 
 namespace android::compositionengine::impl {
-
-#ifdef QTI_DISPLAY_CONFIG_ENABLED
-::DisplayConfig::ClientInterface *mDisplayConfigIntf = nullptr;
-#endif
 
 std::shared_ptr<Display> createDisplay(
         const compositionengine::CompositionEngine& compositionEngine,
@@ -74,15 +65,6 @@ void Display::setConfiguration(const compositionengine::DisplayCreationArgs& arg
     if (!args.physical && args.useHwcVirtualDisplays) {
         mId = maybeAllocateDisplayIdForVirtualDisplay(args.pixels, args.pixelFormat);
     }
-
-#ifdef QTI_DISPLAY_CONFIG_ENABLED
-    int ret = ::DisplayConfig::ClientInterface::Create(args.name, nullptr, &mDisplayConfigIntf);
-    if (ret) {
-        ALOGE("DisplayConfig HIDL not present\n");
-        mDisplayConfigIntf = nullptr;
-    }
-#endif
-
 }
 
 std::optional<DisplayId> Display::maybeAllocateDisplayIdForVirtualDisplay(
@@ -274,21 +256,6 @@ void Display::chooseCompositionStrategy() {
     // Get any composition changes requested by the HWC device, and apply them.
     std::optional<android::HWComposer::DeviceRequestedChanges> changes;
     auto& hwc = getCompositionEngine().getHwComposer();
-
-#ifdef QTI_DISPLAY_CONFIG_ENABLED
-    auto layers = getOutputLayersOrderedByZ();
-    bool hasScreenshot = std::any_of(layers.begin(), layers.end(), [](auto* layer) {
-         return layer->getLayerFE().getCompositionState()->isScreenshot;
-    });
-    if ((mIsVirtual || (mConnectionType == DisplayConnectionType::External)) &&
-        (hasScreenshot != mHasScreenshot) && mDisplayConfigIntf) {
-        const auto hwcDisplayId = hwc.fromPhysicalDisplayId(*mId);
-        if (hwcDisplayId) {
-            mDisplayConfigIntf->SetDisplayAnimating(*hwcDisplayId, hasScreenshot);
-            mHasScreenshot = hasScreenshot;
-        }
-    }
-#endif
     if (status_t result = hwc.getDeviceCompositionChanges(*mId, anyLayersRequireClientComposition(),
                                                           &changes);
         result != NO_ERROR) {

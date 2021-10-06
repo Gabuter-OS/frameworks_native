@@ -195,7 +195,6 @@ struct LayerFECompositionState {
     virtual ~LayerFECompositionState();
     bool isSecureDisplay{false};
     bool isSecureCamera{false};
-    bool isScreenshot{false};
 
     // Debugging
     virtual void dump(std::string& out) const;

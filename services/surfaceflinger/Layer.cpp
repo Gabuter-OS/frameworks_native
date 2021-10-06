@@ -504,7 +504,6 @@ void Layer::prepareGeometryCompositionState() {
     compositionState->isSecure = isSecure();
     compositionState->isSecureDisplay = isSecureDisplay();
     compositionState->isSecureCamera = isSecureCamera();
-    compositionState->isScreenshot = isScreenshot();
 
     compositionState->type = type;
     compositionState->appId = appId;
@@ -797,11 +796,6 @@ bool Layer::isSecureCamera() const {
     return protected_buffer && camera_output;
 }
 
-bool Layer::isScreenshot() const {
-    return ((getName().find("ScreenshotSurface") != std::string::npos) ||
-            (getName().find("RotationLayer") != std::string::npos) ||
-            (getName().find("BackColorSurface") != std::string::npos));
-}
 // ----------------------------------------------------------------------------
 // transaction
 // ----------------------------------------------------------------------------

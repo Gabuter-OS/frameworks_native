@@ -490,7 +490,6 @@ public:
 
     bool isSecureCamera() const;
     bool isSecureDisplay() const;
-    bool isScreenshot() const;
 
     /*
      * isVisible - true if this layer is visible, false otherwise
